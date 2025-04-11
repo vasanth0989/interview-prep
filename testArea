@@ -136,3 +136,17 @@ public class InventoryTracker {
         }
     }
 }
+
+Uses a Map to store inventory, with item names as keys and lists of ItemEntry objects (count and price) as values
+Implements the three transaction types:
+
+Supply: Adds items to inventory at the given price
+Sell: Sells items, prioritizing the cheapest ones first
+Return: Adds returned items back to inventory at a new price
+
+
+Returns an array of revenues from each sell transaction
+
+The solution handles the requirements of selling the cheapest items first and tracking the revenue for each sell transaction. It also manages returns correctly by adding items back to inventory at a potentially different price.
+Would you like me to explain any specific part of the solution in more detail?
+
