@@ -1,1 +1,138 @@
-Hello
+import java.util.*;
+
+public class InventoryTracker {
+    // Map to store inventory: item name -> list of items with their prices
+    private Map<String, List<ItemEntry>> inventory;
+    // List to store revenues from sell transactions
+    private List<Double> sellRevenues;
+
+    public InventoryTracker() {
+        inventory = new HashMap<>();
+        sellRevenues = new ArrayList<>();
+    }
+
+    // Class to represent an item entry with count and price
+    private static class ItemEntry {
+        int count;
+        double price;
+        
+        ItemEntry(int count, double price) {
+            this.count = count;
+            this.price = price;
+        }
+    }
+
+    // Process a supply transaction
+    private void processSupply(String itemName, int count, double price) {
+        inventory.putIfAbsent(itemName, new ArrayList<>());
+        inventory.get(itemName).add(new ItemEntry(count, price));
+    }
+
+    // Process a sell transaction
+    private void processSell(String itemName, int count) {
+        if (!inventory.containsKey(itemName)) {
+            throw new IllegalArgumentException("Item not available: " + itemName);
+        }
+        
+        List<ItemEntry> entries = inventory.get(itemName);
+        int remaining = count;
+        double revenue = 0;
+        
+        // Sort entries by price to sell cheapest items first
+        entries.sort(Comparator.comparingDouble(e -> e.price));
+        
+        // Sell items from cheapest to most expensive
+        for (int i = 0; i < entries.size() && remaining > 0; i++) {
+            ItemEntry entry = entries.get(i);
+            
+            if (entry.count <= 0) continue;
+            
+            int sold = Math.min(remaining, entry.count);
+            entry.count -= sold;
+            remaining -= sold;
+            revenue += sold * entry.price;
+        }
+        
+        // Check if we satisfied the full sell amount
+        if (remaining > 0) {
+            throw new IllegalArgumentException("Not enough items to sell: " + itemName);
+        }
+        
+        // Add the revenue from this sale
+        sellRevenues.add(revenue);
+    }
+
+    // Process a return transaction
+    private void processReturn(String itemName, int count, double sellPrice, double newPrice) {
+        // Add the returned items back to inventory at the new price
+        inventory.putIfAbsent(itemName, new ArrayList<>());
+        inventory.get(itemName).add(new ItemEntry(count, newPrice));
+    }
+
+    // Process the transaction log and return the revenues from all sell transactions
+    public double[] processTransactions(String[][] transactionLog) {
+        for (String[] transaction : transactionLog) {
+            String type = transaction[0];
+            
+            switch (type) {
+                case "supply":
+                    processSupply(
+                        transaction[1],                 // item name
+                        Integer.parseInt(transaction[2]), // count
+                        Double.parseDouble(transaction[3]) // price
+                    );
+                    break;
+                    
+                case "sell":
+                    processSell(
+                        transaction[1],                 // item name
+                        Integer.parseInt(transaction[2])  // count
+                    );
+                    break;
+                    
+                case "return":
+                    processReturn(
+                        transaction[1],                 // item name
+                        Integer.parseInt(transaction[2]), // count
+                        Double.parseDouble(transaction[3]), // sell price
+                        Double.parseDouble(transaction[4])  // new price
+                    );
+                    break;
+                    
+                default:
+                    throw new IllegalArgumentException("Unknown transaction type: " + type);
+            }
+        }
+        
+        // Convert List<Double> to double[]
+        double[] result = new double[sellRevenues.size()];
+        for (int i = 0; i < sellRevenues.size(); i++) {
+            result[i] = sellRevenues.get(i);
+        }
+        
+        return result;
+    }
+
+    // Main method for testing
+    public static void main(String[] args) {
+        InventoryTracker tracker = new InventoryTracker();
+        
+        // Example transaction log
+        String[][] transactionLog = {
+            {"supply", "apple", "10", "1.0"},
+            {"supply", "banana", "20", "0.5"},
+            {"sell", "apple", "5"},
+            {"sell", "banana", "10"},
+            {"return", "apple", "2", "1.0", "1.2"},
+            {"sell", "apple", "3"}
+        };
+        
+        double[] revenues = tracker.processTransactions(transactionLog);
+        
+        // Print revenues
+        System.out.println("Revenues from sell transactions:");
+        for (double revenue : revenues) {
+            System.out.println(revenue);
+        }
+    }
+}
