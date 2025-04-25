@@ -1,152 +1,42 @@
-import java.util.*;
-
-public class InventoryTracker {
-    // Map to store inventory: item name -> list of items with their prices
-    private Map<String, List<ItemEntry>> inventory;
-    // List to store revenues from sell transactions
-    private List<Double> sellRevenues;
-
-    public InventoryTracker() {
-        inventory = new HashMap<>();
-        sellRevenues = new ArrayList<>();
+public class StockSpan {
+    public static void main(String[] args) {
+        int[] prices = {100, 80, 60, 70, 60, 75, 85};
+        int[] spans = calculateSpan(prices);
+        
+        System.out.print("Prices: ");
+        printArray(prices);
+        
+        System.out.print("Spans:  ");
+        printArray(spans);
     }
-
-    // Class to represent an item entry with count and price
-    private static class ItemEntry {
-        int count;
-        double price;
+    
+    public static int[] calculateSpan(int[] prices) {
+        int n = prices.length;
+        int[] spans = new int[n];
         
-        ItemEntry(int count, double price) {
-            this.count = count;
-            this.price = price;
-        }
-    }
-
-    // Process a supply transaction
-    private void processSupply(String itemName, int count, double price) {
-        inventory.putIfAbsent(itemName, new ArrayList<>());
-        inventory.get(itemName).add(new ItemEntry(count, price));
-    }
-
-    // Process a sell transaction
-    private void processSell(String itemName, int count) {
-        if (!inventory.containsKey(itemName)) {
-            throw new IllegalArgumentException("Item not available: " + itemName);
-        }
+        // Span for the first day is always 1
+        spans[0] = 1;
         
-        List<ItemEntry> entries = inventory.get(itemName);
-        int remaining = count;
-        double revenue = 0;
-        
-        // Sort entries by price to sell cheapest items first
-        entries.sort(Comparator.comparingDouble(e -> e.price));
-        
-        // Sell items from cheapest to most expensive
-        for (int i = 0; i < entries.size() && remaining > 0; i++) {
-            ItemEntry entry = entries.get(i);
+        // Calculate span for remaining days
+        for (int i = 1; i < n; i++) {
+            // Initialize span as 1 (counting at least the current day)
+            spans[i] = 1;
             
-            if (entry.count <= 0) continue;
-            
-            int sold = Math.min(remaining, entry.count);
-            entry.count -= sold;
-            remaining -= sold;
-            revenue += sold * entry.price;
-        }
-        
-        // Check if we satisfied the full sell amount
-        if (remaining > 0) {
-            throw new IllegalArgumentException("Not enough items to sell: " + itemName);
-        }
-        
-        // Add the revenue from this sale
-        sellRevenues.add(revenue);
-    }
-
-    // Process a return transaction
-    private void processReturn(String itemName, int count, double sellPrice, double newPrice) {
-        // Add the returned items back to inventory at the new price
-        inventory.putIfAbsent(itemName, new ArrayList<>());
-        inventory.get(itemName).add(new ItemEntry(count, newPrice));
-    }
-
-    // Process the transaction log and return the revenues from all sell transactions
-    public double[] processTransactions(String[][] transactionLog) {
-        for (String[] transaction : transactionLog) {
-            String type = transaction[0];
-            
-            switch (type) {
-                case "supply":
-                    processSupply(
-                        transaction[1],                 // item name
-                        Integer.parseInt(transaction[2]), // count
-                        Double.parseDouble(transaction[3]) // price
-                    );
-                    break;
-                    
-                case "sell":
-                    processSell(
-                        transaction[1],                 // item name
-                        Integer.parseInt(transaction[2])  // count
-                    );
-                    break;
-                    
-                case "return":
-                    processReturn(
-                        transaction[1],                 // item name
-                        Integer.parseInt(transaction[2]), // count
-                        Double.parseDouble(transaction[3]), // sell price
-                        Double.parseDouble(transaction[4])  // new price
-                    );
-                    break;
-                    
-                default:
-                    throw new IllegalArgumentException("Unknown transaction type: " + type);
+            // Look back to find prices less than or equal to current
+            int j = i - 1;
+            while (j >= 0 && prices[j] <= prices[i]) {
+                spans[i] += 1;
+                j--;
             }
         }
         
-        // Convert List<Double> to double[]
-        double[] result = new double[sellRevenues.size()];
-        for (int i = 0; i < sellRevenues.size(); i++) {
-            result[i] = sellRevenues.get(i);
-        }
-        
-        return result;
+        return spans;
     }
-
-    // Main method for testing
-    public static void main(String[] args) {
-        InventoryTracker tracker = new InventoryTracker();
-        
-        // Example transaction log
-        String[][] transactionLog = {
-            {"supply", "apple", "10", "1.0"},
-            {"supply", "banana", "20", "0.5"},
-            {"sell", "apple", "5"},
-            {"sell", "banana", "10"},
-            {"return", "apple", "2", "1.0", "1.2"},
-            {"sell", "apple", "3"}
-        };
-        
-        double[] revenues = tracker.processTransactions(transactionLog);
-        
-        // Print revenues
-        System.out.println("Revenues from sell transactions:");
-        for (double revenue : revenues) {
-            System.out.println(revenue);
+    
+    public static void printArray(int[] arr) {
+        for (int value : arr) {
+            System.out.print(value + " ");
         }
+        System.out.println();
     }
 }
-
-Uses a Map to store inventory, with item names as keys and lists of ItemEntry objects (count and price) as values
-Implements the three transaction types:
-
-Supply: Adds items to inventory at the given price
-Sell: Sells items, prioritizing the cheapest ones first
-Return: Adds returned items back to inventory at a new price
-
-
-Returns an array of revenues from each sell transaction
-
-The solution handles the requirements of selling the cheapest items first and tracking the revenue for each sell transaction. It also manages returns correctly by adding items back to inventory at a potentially different price.
-Would you like me to explain any specific part of the solution in more detail?
-
