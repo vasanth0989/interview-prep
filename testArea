@@ -1,42 +1,56 @@
-public class StockSpan {
+import java.util.ArrayList;
+import java.util.Stack;
+
+public class StockSpanWithArrayList {
     public static void main(String[] args) {
-        int[] prices = {100, 80, 60, 70, 60, 75, 85};
-        int[] spans = calculateSpan(prices);
+        // Store prices in an ArrayList instead of an array
+        ArrayList<Integer> prices = new ArrayList<>();
+        prices.add(100);
+        prices.add(80);
+        prices.add(60);
+        prices.add(70);
+        prices.add(60);
+        prices.add(75);
+        prices.add(85);
+        
+        ArrayList<Integer> spans = calculateSpan(prices);
         
         System.out.print("Prices: ");
-        printArray(prices);
+        System.out.println(prices);
         
         System.out.print("Spans:  ");
-        printArray(spans);
+        System.out.println(spans);
     }
     
-    public static int[] calculateSpan(int[] prices) {
-        int n = prices.length;
-        int[] spans = new int[n];
+    public static ArrayList<Integer> calculateSpan(ArrayList<Integer> prices) {
+        int n = prices.size();
+        ArrayList<Integer> spans = new ArrayList<>(n);
+        Stack<Integer> stack = new Stack<>();
         
-        // Span for the first day is always 1
-        spans[0] = 1;
+        // Initialize spans ArrayList with placeholder values
+        for (int i = 0; i < n; i++) {
+            spans.add(0);
+        }
+        
+        // First day's span is always 1
+        spans.set(0, 1);
+        stack.push(0);
         
         // Calculate span for remaining days
         for (int i = 1; i < n; i++) {
-            // Initialize span as 1 (counting at least the current day)
-            spans[i] = 1;
-            
-            // Look back to find prices less than or equal to current
-            int j = i - 1;
-            while (j >= 0 && prices[j] <= prices[i]) {
-                spans[i] += 1;
-                j--;
+            // Pop elements from stack while price is greater than or equal to price at stack's top
+            while (!stack.isEmpty() && prices.get(stack.peek()) <= prices.get(i)) {
+                stack.pop();
             }
+            
+            // If stack is empty, all previous prices are smaller
+            // Otherwise, the span is the distance from current day to the nearest higher price day
+            spans.set(i, stack.isEmpty() ? (i + 1) : (i - stack.peek()));
+            
+            // Push current day's index to stack
+            stack.push(i);
         }
         
         return spans;
-    }
-    
-    public static void printArray(int[] arr) {
-        for (int value : arr) {
-            System.out.print(value + " ");
-        }
-        System.out.println();
     }
 }
