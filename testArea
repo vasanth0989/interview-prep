@@ -10,3 +10,15 @@
  [Email Sender]   [SMS Sender]   [Push Notification Sender]
        |               |              |
    (SMTP Server)   (SMS Gateway)   (Push Gateway)
+
+
+Key Points:
+Systems (A, B, C) publish notification events to Kafka Topics (e.g., notification-topic).
+
+Notification Service is a Kafka Consumer that listens to events.
+
+Based on event type (email, SMS, push):
+
+Routes to respective Sender Modules.
+
+Sender modules interact with external gateways (SMTP, SMS Gateway, Push Service).
