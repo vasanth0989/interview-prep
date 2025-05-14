@@ -1,3 +1,24 @@
+I'll help you solve this classic "Word Ladder" problem in Java. This is a graph traversal problem where we need to find the shortest path from a begin word to an end word by changing one letter at a time.I've created a Java solution for the Word Ladder problem. Here's how it works:
+
+**Algorithm Overview:**
+1. Uses Breadth-First Search (BFS) to find the shortest transformation sequence
+2. Each word is a node in the graph, and edges exist between words that differ by exactly one letter
+3. BFS guarantees finding the shortest path
+
+**Key Points:**
+- The solution counts the number of words in the transformation sequence (including the end word)
+- The begin word is not counted as a transformed word
+- Returns 0 if no transformation sequence exists
+- Time complexity: O(M² × N) where M is the length of each word and N is the number of words
+- Space complexity: O(N) for the sets and queue
+
+**Example Transformations:**
+- "cot" → "hot" → "hit" returns 3
+- "dog" → "cog" returns 2
+
+The code includes test cases to verify the solution works correctly. You can modify the `wordList` and test with different begin/end words as needed.
+
+
 import java.util.*;
 
 public class WordLadder {
